@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import os
 import sys
+from imageStitch import *
 
 def getVideoPaths():
     if len(sys.argv) != 2:
@@ -33,8 +34,10 @@ def getVideoPaths():
 
 def loadFrames(videoPaths):
     numVideos = len(videoPaths)
+    outputDirectories = [] # stores the folders that contain the frames for each video
     for i in range(numVideos):
         outputDirectory = f"out/video{i+1}/extracted_frames/"
+        outputDirectories.append(outputDirectory)
         try:
             if not os.path.exists(outputDirectory):
                 os.makedirs(outputDirectory)
@@ -57,6 +60,9 @@ def loadFrames(videoPaths):
 
             count += 1
 
+    return outputDirectories
+
 if __name__ == "__main__":
     videoPaths = getVideoPaths()
-    loadFrames(videoPaths)
+    frameFolders = loadFrames(videoPaths)
+    processFrames(frameFolders)
