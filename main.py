@@ -4,12 +4,12 @@ import os
 import sys
 from imageStitch import *
 
+num = int(sys.argv[1])
+
 def getVideoPaths():
     if len(sys.argv) != 2:
         print("Usage: python main.py <video number>")
         sys.exit(1)
-    
-    num = int(sys.argv[1])
 
     if num not in range(1,6):
         print("Usage: video number must be between 1 and 5")
@@ -35,12 +35,16 @@ def getVideoPaths():
 def loadFrames(videoPaths):
     numVideos = len(videoPaths)
     outputDirectories = [] # stores the folders that contain the frames for each video
+
     for i in range(numVideos):
-        outputDirectory = f"out/video{i+1}/extracted_frames/"
+        outputDirectory = f"out/dataset{num}/video{i+1}/extracted_frames/"
         outputDirectories.append(outputDirectory)
         try:
             if not os.path.exists(outputDirectory):
                 os.makedirs(outputDirectory)
+            else:
+                print(f"Already loaded frames for dataset {num} video {i+1}")
+                continue
         except OSError:
             print("Error: Creating output directory")
 
