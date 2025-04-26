@@ -17,18 +17,26 @@ def getVideoPaths():
 
     videoPaths = []
     directory = f"video_data/video{num}/"
-    if num != 5:
+    if num != 5 and num != 3:
         videoPath = directory + f"real_00{num}.mp4"
         videoPaths.append(videoPath)
         print(f"Queuing {videoPath} for processing")
         return videoPaths
-    else:
+    elif num == 5:
         forest1 = directory + "forest1.mp4"
         forest2 = directory + "forest2.mp4"
         videoPaths.append(forest1)
         print(f"Queuing {forest1} for processing")
         videoPaths.append(forest2)
         print(f"Queuing {forest2} for processing")
+        return videoPaths
+    else:
+        deer1 = directory + "deer1.mp4"
+        deer2 = directory + "deer2.mp4"
+        videoPaths.append(deer1)
+        print(f"Queuing {deer1} for processing")
+        videoPaths.append(deer2)
+        print(f"Queuing {deer2} for processing")
         return videoPaths
         
 
@@ -60,7 +68,7 @@ def loadFrames(videoPaths):
 
             if success:
                 cv2.imwrite(outputDirectory + "frame%d.jpg" % count, image)
-                print(f"Successfully captured frame {count}")
+                print(f"Successfully captured frame {count}", end='\r')
 
             count += 1
 
