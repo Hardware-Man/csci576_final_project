@@ -2,9 +2,7 @@ import numpy as np
 import cv2
 import os
 import sys
-from imageStitch import *
-
-num = int(sys.argv[1])
+from image import *
 
 def getVideoPaths():
     if len(sys.argv) != 2:
@@ -59,22 +57,31 @@ def loadFrames(videoPaths):
         video_name = videoPaths[i]
         cap = cv2.VideoCapture(video_name)
 
-        count = 0
+        if cap.isOpened():
+            count = 0
 
-        success = 1
+            success = 1
 
-        while success:
-            success, image = cap.read()
+            tick = 0
 
-            if success:
-                cv2.imwrite(outputDirectory + "frame%d.jpg" % count, image)
+            while success:
+                success, image = cap.read()
 
-            count += 1
-        print(f"Captured {count} frames")
+                tick += 1
+                if tick == 3:
+                    tick = 0
+                if tick == 1:
+                    if success:
+                        cv2.imwrite(outputDirectory + f"frame{str(count).zfill(3)}.jpg", image)
+
+                    count += 1
+            print(f"Captured {count} frames")
+            cap.release()
 
     return outputDirectories
 
 if __name__ == "__main__":
+    num = int(sys.argv[1])
     videoPaths = getVideoPaths()
     frameFolders = loadFrames(videoPaths)
     processFrames(frameFolders)
