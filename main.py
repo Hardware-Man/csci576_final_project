@@ -68,9 +68,9 @@ def loadFrames(videoPaths):
 
             if success:
                 cv2.imwrite(outputDirectory + "frame%d.jpg" % count, image)
-                print(f"Successfully captured frame {count}", end='\r')
 
             count += 1
+        print(f"Captured {count} frames")
 
     return outputDirectories
 
