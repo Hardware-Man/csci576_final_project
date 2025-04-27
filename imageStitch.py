@@ -22,18 +22,16 @@ def stitchImage(folder):
 		img = cv2.imread(image)
 		imgResize = cv2.resize(img, (400, 300))
 		images.append(imgResize)
-	cv2.imshow("image 0", images[0])
-	cv2.waitKey(0)
-	'''
+
 	imageStitcher = cv2.Stitcher_create()
 
-	error, stitchedImage = imageStitcher.stitch(images)
+	error, stitchedImage = imageStitcher.stitch([images[0], images[len(images)-1]])
 
 	if not error:
 		cv2.imwrite('out/stitchedOutput.png', stitchedImage)
 		cv2.imshow("Stitched Image", stitchedImage)
 		cv2.waitKey(0)
-	'''
+
 
 def processFrames(folders):
 	for folder in folders:
