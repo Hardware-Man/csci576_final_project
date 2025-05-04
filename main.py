@@ -87,6 +87,10 @@ def loadFrames(videoPaths):
     return outputDirectories
 
 if __name__ == "__main__":
-    num, videoPaths = getVideoPaths()
-    frameFolders = loadFrames(videoPaths)
-    processFrames(frameFolders)
+    try:
+        num, videoPaths = getVideoPaths()
+        frameFolders = loadFrames(videoPaths)
+        processFrames(frameFolders)
+    except KeyboardInterrupt:
+        print('^C')
+        sys.exit()
