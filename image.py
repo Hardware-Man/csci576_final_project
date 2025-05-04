@@ -6,6 +6,7 @@ from imageStitch import *
 def processFolder(folder):
     image_paths = glob.glob(folder + '*.jpg')
     images = []
+    print(f"Reading images in {folder}")
     for i in range(len(image_paths)):
         image = image_paths[i]
         print_load_progress(i+1, len(image_paths))
@@ -19,6 +20,6 @@ def processFrames(folders):
     for folder in folders:
         images += processFolder(folder)
     
-    final = stitchImageArray(images)
+    final = stitchImageArrayDC(images)
     cv2.imwrite("out/finalImage.png", final)
     displayImage(final, "Final Image")

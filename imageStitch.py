@@ -2,30 +2,48 @@ import numpy as np
 import cv2
 from scipy.ndimage import rotate
 import matplotlib.pyplot as plt
+import sys
 from stitching import Stitcher, AffineStitcher
+
+'''
 settings = {
     'detector': 'orb',
     'crop': False,
     'confidence_threshold': 0.2,
-    'warper_type': 'spherical',
+    # 'warper_type': 'spherical',
     # 'warper_type': 'plane',
-    # 'warper_type': 'compressedPlaneA2B1',
+    'warper_type': 'compressedPlaneA2B1',
     # 'warper_type': 'paniniA2B1',
     'compensator': 'no',
     'blender_type': "no",
 }
-affine_settings = {
-    'detector': 'orb',
-    'crop': False,
-    'confidence_threshold': 0.2,
-    'compensator': 'no',
-    'blender_type': "no",
-}
-stitcher = Stitcher(**settings)
-affine_stitcher = AffineStitcher(**affine_settings)
+'''
+
+def createStitcher():
+    warp = 'plane'
+    if len(sys.argv) == 3:
+        warp = sys.argv[2]
+    settings = {
+        'detector': 'orb',
+        'crop': False,
+        'confidence_threshold': 0.2,
+        'warper_type': warp,
+        'compensator': 'no',
+        'blender_type': "no",
+    }
+    
+    affine_settings = {
+        'detector': 'orb',
+        'crop': False,
+        'confidence_threshold': 0.2,
+        'compensator': 'no',
+        'blender_type': "no",
+    }
+    print(f"Creating stitcher with warper_type: {warp}")
+    return Stitcher(**settings), AffineStitcher(**affine_settings)
 
 def print_load_progress(iteration, total, bar_length=50):
-    percent = "{0:.1f}".format(100 * (iteration / float(total)))
+    percent = "{0:.1f}".format(min(100, 100 * (iteration / float(total))))
     filled_length = int(bar_length * iteration // total)
     bar = '#' * filled_length + '-' * (bar_length - filled_length)
     print(f'\rProgress: [{bar}] {percent}%', end='\r')
@@ -102,17 +120,55 @@ def stitchImages(img1, img2):
     return cropExtra(result, 0.001)
 
 def stitchImageArray(images):
+    stitcher, affine_stitcher = createStitcher()
     print(f"Stitching {len(images)} images together")
     out = images[0]
     if (len(images) == 1):
         return out
+    
     for i in range(1, len(images)):
         print_load_progress(i, len(images))
         out = stitchImages(out, images[i])
-        out = stitcher.stitch(out, images[i])
+        # out = stitcher.stitch([out, images[i]])
+
     return out
 
-def displayImage(img, title):
+def stitchImageArrayDC(images):
+    backupImages = images
+    stitcher, affine_stitcher = createStitcher()
+    level = 0
+    while len(images) > 1:
+        print(f"\nlevel {level}")
+        print(f"stitching {len(images)} images")
+        new_images = []
+        for i in range(0, len(images)-1, 2):
+            try:
+                print_load_progress(i, len(images)-1)
+                if level == 0:
+                    image = affine_stitcher.stitch([images[i], images[i+1]])
+                    new_images.append(image)
+                else:
+                    image = stitcher.stitch([images[i], images[i+1]])
+                    new_images.append(image)
+                print_load_progress(i+2, len(images)-1)
+            except Exception as e:
+                print(f"\nError {e}")
+                print(f"Falling back to stitching with stitchImages")
+                try:
+                    new_images.append(stitchImages(images[i], images[i+1]))
+                except Exception as e:
+                    print(f"Error {e}")
+                    print(f"stitchImages failed. Restarting with stitchImageArray")
+                    return stitchImageArray(backupImages)
+        if len(images) % 2 == 1:
+            new_images.append(images[len(images)-1])
+        images = new_images
+        level += 1
+    return images[0]
+
+    
+
+def displayImage(img, title, level = 0, stitch = 0):
     plt.figure(figsize=(10, 10))
     plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     plt.title(title)
