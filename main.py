@@ -58,23 +58,19 @@ def loadFrames(videoPaths):
         cap = cv2.VideoCapture(video_name)
 
         if cap.isOpened():
+            success = 1
+            frame_number = 0
             count = 0
 
-            success = 1
-
-            tick = 0
-
             while success:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number - 1)
                 success, image = cap.read()
 
-                tick += 1
-                if tick == 3:
-                    tick = 0
-                if tick == 1:
-                    if success:
-                        cv2.imwrite(outputDirectory + f"frame{str(count).zfill(3)}.jpg", image)
-
+                if success:
+                    cv2.imwrite(outputDirectory + f"frame{frame_number:03}.jpg", image)
+                    frame_number += 15
                     count += 1
+
             print(f"Captured {count} frames")
             cap.release()
 

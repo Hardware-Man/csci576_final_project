@@ -9,14 +9,14 @@ settings = {
     'warper_type': 'plane',
     'compensator': 'no',
     'blender_type': "no",
-}  
+}
 # stitcher = AffineStitcher(**settings)
 stitcher = Stitcher(**settings)
 
 image1 = cv2.imread("out/dataset3/video1/extracted_frames/frame000.jpg")
 image2 = cv2.imread("out/dataset3/video1/extracted_frames/frame015.jpg")
 # image1 = cv2.imread("result.png")
-# image2 = cv2.imread("out/dataset3/video1/extracted_frames/frame060.jpg")
+# image2 = cv2.imread("out/dataset1/video1/extracted_frames/frame000.jpg")
 
 feature_extractor = cv2.ORB.create(nfeatures=1500, fastThreshold=3)
 
@@ -48,19 +48,13 @@ def stitchImages(img1, img2):
     kp1, des1 = feature_extractor.detectAndCompute(gray1,None)
     kp2, des2 = feature_extractor.detectAndCompute(gray2,None)
 
-    # img1_kp = cv2.drawKeypoints(img1, kp1, None, color=(0,255,0), flags=0)
-    # img2_kp = cv2.drawKeypoints(img2, kp2, None, color=(0,255,0), flags=0)
+    img1_kp = cv2.drawKeypoints(img1, kp1, None, color=(0,255,0), flags=0)
+    img2_kp = cv2.drawKeypoints(img2, kp2, None, color=(0,255,0), flags=0)
 
-    # plt.imshow(cv2.cvtColor(img1_kp, cv2.COLOR_BGR2RGB))
-    # plt.show()
-    # plt.imshow(cv2.cvtColor(img2_kp, cv2.COLOR_BGR2RGB))
-    # plt.show()
-
-    # # FlannBasedMatcher
-    # FLANN_INDEX_KDTREE = 1
-    # index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-    # search_params = dict(checks = 50)
-    # matcher = cv2.FlannBasedMatcher(index_params, search_params)
+    plt.imshow(cv2.cvtColor(img1_kp, cv2.COLOR_BGR2RGB))
+    plt.show()
+    plt.imshow(cv2.cvtColor(img2_kp, cv2.COLOR_BGR2RGB))
+    plt.show()
     
     # Brute Force Matcher
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
@@ -68,12 +62,6 @@ def stitchImages(img1, img2):
     matches = matcher.match(des1, des2)
     matches = sorted(matches, key = lambda x:x.distance)
     good_matches = matches[:10]
-
-    # matches = matcher.knnMatch(des1, des2, k=2)
-    # good_matches = []
-    # for m,n in matches:
-    #     if m.distance < 0.5*n.distance:
-    #         good_matches.append(m)
     
     src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1,1,2)
     dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1,1,2)
