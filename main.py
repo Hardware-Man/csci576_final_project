@@ -2,47 +2,58 @@ import numpy as np
 import cv2
 import os
 import sys
+import glob
 from image import *
 
 def getVideoPaths():
-    if len(sys.argv) != 2:
-        print("Usage: python main.py <video number>")
+    if len(sys.argv) < 2:
+        print("Usage: python main.py <video number|video path> <warp mode>")
         sys.exit(1)
 
-    if num not in range(1,6):
-        print("Usage: video number must be between 1 and 5")
-        sys.exit(1)
+    arg1 = sys.argv[1]
+    if arg1.isnumeric():
+        num = int(arg1)
+        if num not in range(1,6):
+            print("Usage: video number must be between 1 and 5")
+            sys.exit(1)
 
-    videoPaths = []
-    directory = f"video_data/video{num}/"
-    if num != 5 and num != 3:
-        videoPath = directory + f"real_00{num}.mp4"
-        videoPaths.append(videoPath)
-        print(f"Queuing {videoPath} for processing")
-        return videoPaths
-    elif num == 5:
-        forest1 = directory + "forest1.mp4"
-        forest2 = directory + "forest2.mp4"
-        videoPaths.append(forest1)
-        print(f"Queuing {forest1} for processing")
-        videoPaths.append(forest2)
-        print(f"Queuing {forest2} for processing")
-        return videoPaths
+        videoPaths = []
+        directory = f"video_data/video{num}/"
+        if num != 5 and num != 3:
+            videoPath = directory + f"real_00{num}.mp4"
+            videoPaths.append(videoPath)
+            print(f"Queuing {videoPath} for processing")
+        elif num == 5:
+            forest1 = directory + "forest1.mp4"
+            forest2 = directory + "forest2.mp4"
+            videoPaths.append(forest1)
+            print(f"Queuing {forest1} for processing")
+            videoPaths.append(forest2)
+            print(f"Queuing {forest2} for processing")
+        else:
+            deer1 = directory + "deer1.mp4"
+            deer2 = directory + "deer2.mp4"
+            videoPaths.append(deer1)
+            print(f"Queuing {deer1} for processing")
+            videoPaths.append(deer2)
+            print(f"Queuing {deer2} for processing")
+        return num, videoPaths
     else:
-        deer1 = directory + "deer1.mp4"
-        deer2 = directory + "deer2.mp4"
-        videoPaths.append(deer1)
-        print(f"Queuing {deer1} for processing")
-        videoPaths.append(deer2)
-        print(f"Queuing {deer2} for processing")
-        return videoPaths
-        
+        videoFolder = arg1
+        num = int(videoFolder[-1])
+        videoPaths = []
+        for files in os.listdir(videoFolder):
+            if files.endswith('.mp4'):
+                videoPaths.append(files)
+                print(f"Queuing {files} for processing")
+        return num, videoPaths
 
 def loadFrames(videoPaths):
     numVideos = len(videoPaths)
     outputDirectories = [] # stores the folders that contain the frames for each video
 
     for i in range(numVideos):
+        video_name = videoPaths[i]
         outputDirectory = f"out/dataset{num}/video{i+1}/extracted_frames/"
         outputDirectories.append(outputDirectory)
         try:
@@ -54,7 +65,6 @@ def loadFrames(videoPaths):
         except OSError:
             print("Error: Creating output directory")
 
-        video_name = videoPaths[i]
         cap = cv2.VideoCapture(video_name)
 
         if cap.isOpened():
@@ -77,7 +87,6 @@ def loadFrames(videoPaths):
     return outputDirectories
 
 if __name__ == "__main__":
-    num = int(sys.argv[1])
-    videoPaths = getVideoPaths()
+    num, videoPaths = getVideoPaths()
     frameFolders = loadFrames(videoPaths)
     processFrames(frameFolders)
