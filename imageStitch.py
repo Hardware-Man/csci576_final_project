@@ -120,7 +120,6 @@ def stitchImages(img1, img2):
     return cropExtra(result, 0.001)
 
 def stitchImageArray(images):
-    stitcher, affine_stitcher = createStitcher()
     print(f"Stitching {len(images)} images together")
     out = images[0]
     if (len(images) == 1):
@@ -130,6 +129,19 @@ def stitchImageArray(images):
         print_load_progress(i, len(images))
         out = stitchImages(out, images[i])
         # out = stitcher.stitch([out, images[i]])
+
+    return out
+
+def stitchImageArrayWithModule(images):
+    stitcher, affine_stitcher = createStitcher()
+    print(f"Stitching {len(images)} images together")
+    out = images[0]
+    if (len(images) == 1):
+        return out
+    
+    for i in range(1, len(images)):
+        print_load_progress(i, len(images))
+        out = stitcher.stitch([out, images[i]])
 
     return out
 
