@@ -1,11 +1,10 @@
-import numpy as np
 import cv2
 import glob
 import os
 from imageStitch import *
-    
+
 def processFolder(folder):
-    image_paths = glob.glob(folder + '*.jpg')
+    image_paths = glob.glob(folder + '*.png')
     images = []
     print(f"Reading images in {folder}")
     for i in range(len(image_paths)):
@@ -16,7 +15,7 @@ def processFolder(folder):
 
     return images
 
-def processFrames(folders):
+def processFrames(folders, mode=0):
     num = 0
     if len(sys.argv) >= 2:
         arg1 = sys.argv[1]
@@ -32,29 +31,23 @@ def processFrames(folders):
     images = []
     for folder in folders:
         images += processFolder(folder)
-    try:
-        print("Stitching images sequentially with custom stitchImages function")
-        final = stitchImageArray(images)
-        cv2.imwrite(f"{imageDirectory}/finalImageSequentialStitchImagesFunction.png", final)
-        # print("Stitching images with sequential scan using stitching module")
-        # final = stitchImageArrayWithModule(images)
-        # cv2.imwrite(f"{imageDirectory}/finalImageStitchingModuleSequential.png", final)
-        displayImage(final, "Final Image with Sequential Scanning")
-    except Exception as e:
-        title = f"Sequential stitching failed with exception {e}"
-        print(title)
-        plt.title(title)
-        plt.savefig(f"{imageDirectory}/finalIamgeStitchingModuleSequential.png")
-        plt.show()
+
+    if mode == 0:
+        stitcher = createAffineStitcher()
+    elif mode == 1:
+        stitcher = createStitcher()
+    elif mode == 2:
+        stitcher = createStitcher('reproj')
+
+    print(f"Stitching images")
 
     try:
-        print("Stitching images using divide and conquer")
-        finalDC = stitchImageArrayDC(images)
-        cv2.imwrite(f"{imageDirectory}/finalImageDC.png", finalDC)
-        displayImage(finalDC, "Final Image")
+        final = stitcher.stitch(images)
+        cv2.imwrite(f"{imageDirectory}/final_image_{stitcher.settings['warper_type']}_{stitcher.settings['adjuster']}.png", final)
+        displayImage(final, f"Final Image with {str(stitcher.settings['warper_type']).capitalize()} Warper and {str(stitcher.settings['adjuster']).capitalize()} Adjuster")
     except Exception as e:
-        title = f"Divide and conquer scanning failed with exception {e}"
+        title = f"Stitching failed with exception {e}"
         print(title)
         plt.title(title)
-        plt.savefig(f"{imageDirectory}/finalImageDC.png")
+        plt.savefig(f"{imageDirectory}/final_image_{stitcher.settings['warper_type']}_{stitcher.settings['adjuster']}.png")
         plt.show()

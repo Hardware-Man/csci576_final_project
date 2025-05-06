@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-from scipy.ndimage import rotate
 import matplotlib.pyplot as plt
 import sys
 from stitching import Stitcher, AffineStitcher
@@ -19,28 +18,28 @@ settings = {
 }
 '''
 
-def createStitcher():
-    warp = 'plane'
-    if len(sys.argv) == 3:
-        warp = sys.argv[2]
+def createStitcher(adjuster='ray'):
+    warp = 'spherical'
+    if len(sys.argv) > 3:
+        warp = sys.argv[3]
     settings = {
-        'detector': 'orb',
+        'detector': 'brisk',
         'crop': False,
-        'confidence_threshold': 0.2,
-        'warper_type': warp,
         'compensator': 'no',
-        'blender_type': "no",
+        'wave_correct_kind': 'no',
+        'warper_type': warp,
+        'adjuster': adjuster,
     }
-    
+    print(f"Creating stitcher with '{warp}' warper and '{adjuster}' adjuster")
+    return Stitcher(**settings)
+
+def createAffineStitcher():
     affine_settings = {
         'detector': 'orb',
         'crop': False,
-        'confidence_threshold': 0.2,
-        'compensator': 'no',
-        'blender_type': "no",
     }
-    print(f"Creating stitcher with warper_type: {warp}")
-    return Stitcher(**settings), AffineStitcher(**affine_settings)
+    print(f"Creating affine stitcher")
+    return AffineStitcher(**affine_settings)
 
 def print_load_progress(iteration, total, bar_length=50):
     percent = "{0:.1f}".format(min(100, 100 * (iteration / float(total))))
@@ -87,14 +86,14 @@ def stitchImages(img1, img2):
     # plt.show()
     # plt.imshow(cv2.cvtColor(img2_kp, cv2.COLOR_BGR2RGB))
     # plt.show()
-    
+
     # Brute Force Matcher
     matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    
+
     matches = matcher.match(des1, des2)
     matches = sorted(matches, key = lambda x:x.distance)
     good_matches = matches[:10]
-    
+
     src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1,1,2)
     dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1,1,2)
 
@@ -124,21 +123,20 @@ def stitchImageArray(images):
     out = images[0]
     if (len(images) == 1):
         return out
-    
+
     for i in range(1, len(images)):
         print_load_progress(i, len(images))
         out = stitchImages(out, images[i])
-        # out = stitcher.stitch([out, images[i]])
 
     return out
 
 def stitchImageArrayWithModule(images):
-    stitcher, affine_stitcher = createStitcher()
+    stitcher = createStitcher()
     print(f"Stitching {len(images)} images together")
     out = images[0]
     if (len(images) == 1):
         return out
-    
+
     for i in range(1, len(images)):
         print_load_progress(i, len(images))
         out = stitcher.stitch([out, images[i]])
@@ -147,7 +145,8 @@ def stitchImageArrayWithModule(images):
 
 def stitchImageArrayDC(images):
     backupImages = images
-    stitcher, affine_stitcher = createStitcher()
+    stitcher = createStitcher()
+    affine_stitcher = createAffineStitcher()
     level = 0
     while len(images) > 1:
         print(f"\nlevel {level}")
@@ -156,7 +155,7 @@ def stitchImageArrayDC(images):
         for i in range(0, len(images)-1, 2):
             try:
                 print_load_progress(i, len(images)-1)
-                if level == 0:
+                if level < 1:
                     image = affine_stitcher.stitch([images[i], images[i+1]])
                     new_images.append(image)
                 else:
@@ -165,12 +164,12 @@ def stitchImageArrayDC(images):
                 print_load_progress(i+2, len(images)-1)
             except Exception as e:
                 print(f"\nError {e}")
-                print(f"Falling back to stitching with stitchImages")
+                print(f"Falling back to stitching with affine stitcher")
                 try:
-                    new_images.append(stitchImages(images[i], images[i+1]))
+                    new_images.append(affine_stitcher.stitch([images[i], images[i+1]]))
                 except Exception as e:
                     print(f"Error {e}")
-                    print(f"stitchImages failed. Restarting with stitchImageArray")
+                    print(f"affine stitcher failed. Restarting with stitchImageArray")
                     return stitchImageArray(backupImages)
         if len(images) % 2 == 1:
             new_images.append(images[len(images)-1])
@@ -178,9 +177,7 @@ def stitchImageArrayDC(images):
         level += 1
     return images[0]
 
-    
-
-def displayImage(img, title, level = 0, stitch = 0):
+def displayImage(img, title):
     plt.figure(figsize=(10, 10))
     plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     plt.title(title)

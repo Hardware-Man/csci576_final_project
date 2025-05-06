@@ -3,20 +3,23 @@ import cv2
 import matplotlib.pyplot as plt
 from stitching import Stitcher, AffineStitcher
 settings = {
+    'detector': 'brisk',
+    'crop': False,
+    'compensator': 'no',
+    'wave_correct_kind': 'no',
+    'warper_type': 'spherical',
+    'adjuster': 'ray',
+}
+affine_settings = {
     'detector': 'orb',
     'crop': False,
-    'confidence_threshold': 0.2,
-    'warper_type': 'plane',
-    'compensator': 'no',
-    'blender_type': "no",
 }
-# stitcher = AffineStitcher(**settings)
+affine_stitcher = AffineStitcher(**affine_settings)
 stitcher = Stitcher(**settings)
 
-image1 = cv2.imread("out/dataset3/video1/extracted_frames/frame000.jpg")
-image2 = cv2.imread("out/dataset3/video1/extracted_frames/frame015.jpg")
-# image1 = cv2.imread("result.png")
-# image2 = cv2.imread("out/dataset1/video1/extracted_frames/frame000.jpg")
+images = []
+images.append(cv2.imread("out/dataset1/video1/keyframes/frame560.png"))
+images.append(cv2.imread("out/dataset1/video1/keyframes/frame616.png"))
 
 feature_extractor = cv2.ORB.create(nfeatures=1500, fastThreshold=3)
 
@@ -87,8 +90,9 @@ def stitchImages(img1, img2):
     result[ofst2[1]:ofst2[1]+h2, ofst2[0]:ofst2[0]+w2, :3] = img2
     return cropExtra(result,0.001)
 
-result = stitchImages(image1, image2)
-# result = stitcher.stitch([image1, image2])
+# result = stitchImages(images[0], images[1])
+result = affine_stitcher.stitch(images)
+# result = stitcher.stitch(images)
 plt.figure(figsize=(10, 10))
 plt.imshow(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
 plt.show()
