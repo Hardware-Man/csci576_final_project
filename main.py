@@ -39,16 +39,18 @@ def getVideoPaths():
             print(f"Queuing {deer2} for processing")
     else:
         videoFolder = arg1
+        videoFolder = videoFolder.replace("\\", "/")
+        if videoFolder[-1] != "/":
+            videoFolder += "/"
         dataset_num = 0
         videoPaths = []
-        for files in os.listdir(videoFolder):
-            if files.endswith('.mp4'):
-                videoPaths.append(files)
-                print(f"Queuing {files} for processing")
+        for file in os.listdir(videoFolder):
+            if file.endswith('.mp4'):
+                videoPath = videoFolder + file
+                videoPaths.append(videoPath)
+                print(f"Queuing {videoPath} for processing")
         
     return dataset_num, videoPaths
-
-# ffmpeg -skip_frame nokey -i .\video_data\video5\forest1.mp4 -vsync vfr -frame_pts true .\out\dataset5\video1\keyframes\frame%03d.png
 
 def loadFrames(dataset_num, videoPaths):
     numVideos = len(videoPaths)
