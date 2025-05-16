@@ -1,6 +1,7 @@
 ./vscode
 video_data/
+out/
 *.mp4
-*.jpg
-*.png
+test/*.jpg
+test/*.png
 __pycache__/
